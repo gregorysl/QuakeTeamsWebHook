@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2036
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuakeTeamsWebHook", "QuakeTeamsWebHook\QuakeTeamsWebHook.csproj", "{05E5CACD-1138-402E-A909-EE82F9125811}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{05E5CACD-1138-402E-A909-EE82F9125811}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05E5CACD-1138-402E-A909-EE82F9125811}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05E5CACD-1138-402E-A909-EE82F9125811}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05E5CACD-1138-402E-A909-EE82F9125811}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E4B53C15-5C17-4D54-A099-DCA6773B5280}
+	EndGlobalSection
+EndGlobal

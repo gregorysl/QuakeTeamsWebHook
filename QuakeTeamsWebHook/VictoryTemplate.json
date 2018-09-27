@@ -1,0 +1,16 @@
+﻿{
+  "@type": "MessageCard",
+  "@context": "http://schema.org/extensions",
+  "themeColor": "0076D7",
+  "summary": "Match has ended!",
+  "sections": [
+    {
+      "title": "**A match has ended**",
+      "activityTitle": "$MAPNAME",
+      "activitySubtitle": "$ENDREASON",
+      "activityImage": "https://ioquake3.org/wp/wp-content/uploads/2017/02/icon_256x256.png",
+      "facts": [ $FACTS ],
+      "markdown": true
+    }
+	]
+}
