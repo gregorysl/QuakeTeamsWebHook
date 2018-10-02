@@ -11,6 +11,8 @@ namespace QuakeTeamsWebHook
 {
     class Program
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private  static readonly NewLog GameLog = new NewLog();
         
 
@@ -44,7 +46,7 @@ namespace QuakeTeamsWebHook
             using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
             {
                 var result = streamReader.ReadToEnd();
-                Console.WriteLine(result);
+                logger.Info($"Server response:{result}");
             }
         }
 
@@ -88,15 +90,24 @@ namespace QuakeTeamsWebHook
                                     var scoreJson = GameLog.Game.ScorecardJson();
                                     var endReason = GameLog.Game.EndReason;
                                     var mapName = GameLog.Game.MapName;
-                                    Console.WriteLine(scoreJson);
-                                    Task.Run(() => SendNotification(scoreJson, endReason, mapName));
+                                    if (string.IsNullOrEmpty(scoreJson))
+                                    {
+                                        Task.Run(() => SendNotification(scoreJson, endReason, mapName));
+                                    }
+                                    else
+                                    {
+                                        logger.Info("Omitting MSTEAMS notification as no players were playing");
+                                    }
                                     GameLog.Game.Reset();
                                 }
                             }
                         }
                     }
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    logger.Error(e);
+                }
 
                 Thread.Sleep(1000);
             }
