@@ -18,6 +18,7 @@ namespace QuakeTeamsWebHook
 
         static void Main(string[] args)
         {
+            logger.Info("Starting QuakeTeamsWebHook");
             var logPath = ConfigurationManager.AppSettings["logPath"];
             MonitorTailOfFile(logPath);
         }
@@ -87,6 +88,7 @@ namespace QuakeTeamsWebHook
 
                                 if (GameLog.Game.Finished)
                                 {
+                                    logger.Info("Game finished");
                                     var scoreJson = GameLog.Game.ScorecardJson();
                                     var endReason = GameLog.Game.EndReason;
                                     var mapName = GameLog.Game.MapName;
