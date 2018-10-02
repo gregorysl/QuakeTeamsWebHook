@@ -92,7 +92,7 @@ namespace QuakeTeamsWebHook
                                     var scoreJson = GameLog.Game.ScorecardJson();
                                     var endReason = GameLog.Game.EndReason;
                                     var mapName = GameLog.Game.MapName;
-                                    if (string.IsNullOrEmpty(scoreJson))
+                                    if (!string.IsNullOrEmpty(scoreJson))
                                     {
                                         Task.Run(() => SendNotification(scoreJson, endReason, mapName));
                                     }
