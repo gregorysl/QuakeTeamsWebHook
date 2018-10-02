@@ -70,4 +70,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /Y "$(TargetDir)*.*" "C:\Program Files (x86)\ioquake3\QuakeTeamScoreHook\"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
