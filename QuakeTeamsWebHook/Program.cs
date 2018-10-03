@@ -5,31 +5,37 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using QuakeTeamsWebHook;
+using System.Reflection;
 
 namespace QuakeTeamsWebHook
 {
     class Program
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private  static readonly NewLog GameLog = new NewLog();
         
 
         static void Main(string[] args)
         {
+            logger.Info("Starting QuakeTeamsWebHook");
             var logPath = ConfigurationManager.AppSettings["logPath"];
             MonitorTailOfFile(logPath);
         }
 
         private static string GetJsonToSend(string scoreJson, string endReason, string mapName) {
-            TextReader tr = new StreamReader(@"VictoryTemplate.json");
+            
+            TextReader tr = new StreamReader(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "VictoryTemplate.json"));
             string myText = tr.ReadToEnd();
             var withScore = myText.Replace("$FACTS",scoreJson).Replace("$ENDREASON", endReason).Replace("$MAPNAME", mapName);
             return withScore;
         }
         private static void SendNotification(string scoreJson, string endReason, string mapName)
         {
+            logger.Debug("Getting Json to send");
             var values = GetJsonToSend(scoreJson,endReason, mapName);
 
+            logger.Debug($"Obtained JSON to send {values}");
             var webHookUrl = ConfigurationManager.AppSettings["webHookUrl"];  
             var httpWebRequest = (HttpWebRequest) WebRequest.Create(webHookUrl);
             httpWebRequest.ContentType = "application/json";
@@ -40,11 +46,20 @@ namespace QuakeTeamsWebHook
                 streamWriter.Write(values);
             }
 
-            var httpResponse = (HttpWebResponse) httpWebRequest.GetResponse();
-            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+
+            logger.Debug("Calling MS Teams Server");
+            try
             {
-                var result = streamReader.ReadToEnd();
-                Console.WriteLine(result);
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                    logger.Info($"Server response:{result}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "MS Teams Call exception");
             }
         }
 
@@ -85,18 +100,29 @@ namespace QuakeTeamsWebHook
 
                                 if (GameLog.Game.Finished)
                                 {
+                                    logger.Info("Game finished");
                                     var scoreJson = GameLog.Game.ScorecardJson();
                                     var endReason = GameLog.Game.EndReason;
                                     var mapName = GameLog.Game.MapName;
-                                    Console.WriteLine(scoreJson);
-                                    Task.Run(() => SendNotification(scoreJson, endReason, mapName));
+                                    if (!string.IsNullOrEmpty(scoreJson))
+                                    {
+                                        logger.Info("Running notification task");
+                                        Task.Run(() => SendNotification(scoreJson, endReason, mapName));
+                                    }
+                                    else
+                                    {
+                                        logger.Info("Omitting MSTEAMS notification as no players were playing");
+                                    }
                                     GameLog.Game.Reset();
                                 }
                             }
                         }
                     }
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    logger.Error(e);
+                }
 
                 Thread.Sleep(1000);
             }
