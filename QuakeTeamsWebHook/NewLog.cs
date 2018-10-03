@@ -12,7 +12,7 @@ namespace QuakeTeamsWebHook
 
         public NewLog()
         {
-            _actionsRegex = new Regex("(ShutdownGame:|score:|Exit:|InitGame:)");
+            _actionsRegex = new Regex($"({Consts.ShutdownGame}|{Consts.Score}|{Consts.Exit}|{Consts.InitGame})");
             _scorecardRegex = new Regex(@"score: (\d+)  ping: \d+  client: \d+ (.+)");
             _mapNameRegex = new Regex(@"mapname\\(.+?)\\");
             Game = new Game();
@@ -24,14 +24,14 @@ namespace QuakeTeamsWebHook
 
             switch (action.Value)
             {
-                case "ShutdownGame:":
+                case Consts.ShutdownGame:
                     Game.Finished = true;
                     break;
-                case "Exit:":
+                case Consts.Exit:
                     const string findText = " Exit: ";
                     Game.EndReason = line.Substring(line.IndexOf(findText) + findText.Length);
                     break;
-                case "score:":
+                case Consts.Score:
                     var matches = _scorecardRegex.Match(line);
                     if (matches.Groups.Count == 3)
                     {
@@ -40,10 +40,9 @@ namespace QuakeTeamsWebHook
                         Game.Scorecard.Add(card);
                     }
                     break;
-                case "InitGame:":
+                case Consts.InitGame:
                     var nameMatch = _mapNameRegex.Match(line);
                     Game.MapName = nameMatch.Groups[1].Value;
-
                     break;
                 default:
                     break;
