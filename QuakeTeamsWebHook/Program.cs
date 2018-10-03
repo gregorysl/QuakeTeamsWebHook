@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using NLog;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -11,15 +12,17 @@ namespace QuakeTeamsWebHook
 {
     class Program
     {
-        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        private  static readonly NewLog GameLog = new NewLog();
+        private static readonly NewLog GameLog = new NewLog();
+        private static string webHookUrl;
         
 
         static void Main(string[] args)
         {
             logger.Info("Starting QuakeTeamsWebHook");
             var logPath = ConfigurationManager.AppSettings["logPath"];
+            webHookUrl = ConfigurationManager.AppSettings["webHookUrl"];
             MonitorTailOfFile(logPath);
         }
 
@@ -36,7 +39,6 @@ namespace QuakeTeamsWebHook
             var values = GetJsonToSend(scoreJson,endReason, mapName);
 
             logger.Debug($"Obtained JSON to send {values}");
-            var webHookUrl = ConfigurationManager.AppSettings["webHookUrl"];  
             var httpWebRequest = (HttpWebRequest) WebRequest.Create(webHookUrl);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "POST";
