@@ -16,36 +16,32 @@ namespace QuakeTeamsWebHook
 
         private static readonly NewLog GameLog = new NewLog();
         private static string webHookUrl;
-        
+        private static string jsonTemplate;
+
 
         static void Main(string[] args)
         {
             logger.Info("Starting QuakeTeamsWebHook");
             var logPath = ConfigurationManager.AppSettings["logPath"];
             webHookUrl = ConfigurationManager.AppSettings["webHookUrl"];
+            TextReader tr = new StreamReader(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "VictoryTemplate.json"));
+            jsonTemplate = tr.ReadToEnd();
             MonitorTailOfFile(logPath);
         }
 
-        private static string GetJsonToSend(string scoreJson, string endReason, string mapName) {
-            
-            TextReader tr = new StreamReader(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "VictoryTemplate.json"));
-            string myText = tr.ReadToEnd();
-            var withScore = myText.Replace("$FACTS",scoreJson).Replace("$ENDREASON", endReason).Replace("$MAPNAME", mapName);
-            return withScore;
-        }
-        private static void SendNotification(string scoreJson, string endReason, string mapName)
+        private static void SendNotification(string json,string scoreJson, string endReason, string mapName)
         {
             logger.Debug("Getting Json to send");
-            var values = GetJsonToSend(scoreJson,endReason, mapName);
+            var filledJsonTemplate = json.Replace("$FACTS", scoreJson).Replace("$ENDREASON", endReason).Replace("$MAPNAME", mapName);
 
-            logger.Debug($"Obtained JSON to send {values}");
+            logger.Debug($"Obtained JSON to send {filledJsonTemplate }");
             var httpWebRequest = (HttpWebRequest) WebRequest.Create(webHookUrl);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "POST";
 
             using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
             {
-                streamWriter.Write(values);
+                streamWriter.Write(filledJsonTemplate);
             }
 
 
@@ -68,7 +64,7 @@ namespace QuakeTeamsWebHook
         public static void MonitorTailOfFile(string filePath)
         {
             var initialFileSize = new FileInfo(filePath).Length;
-            var lastReadLength = initialFileSize - 1024;
+            var lastReadLength = initialFileSize - 10240;
             if (lastReadLength < 0) lastReadLength = 0;
 
             while (true)
@@ -106,16 +102,16 @@ namespace QuakeTeamsWebHook
                                     var scoreJson = GameLog.Game.ScorecardJson();
                                     var endReason = GameLog.Game.EndReason;
                                     var mapName = GameLog.Game.MapName;
+                                    GameLog.Game.Reset();
                                     if (!string.IsNullOrEmpty(scoreJson))
                                     {
                                         logger.Info("Running notification task");
-                                        Task.Run(() => SendNotification(scoreJson, endReason, mapName));
+                                        Task.Run(() => SendNotification(jsonTemplate, scoreJson, endReason, mapName));
                                     }
                                     else
                                     {
                                         logger.Info("Omitting MSTEAMS notification as no players were playing");
                                     }
-                                    GameLog.Game.Reset();
                                 }
                             }
                         }
