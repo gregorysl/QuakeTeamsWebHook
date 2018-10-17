@@ -65,6 +65,10 @@ namespace QuakeTeamsWebHook
                 default:
                     break;
             }
+            if (Game.Players.Count > 0 && Game.Scorecard.Count == Game.Players.Count)
+            {
+                Game.Finished = true;
+            }
         }
         private string GetMatchValue(Match match, int i)
         {
