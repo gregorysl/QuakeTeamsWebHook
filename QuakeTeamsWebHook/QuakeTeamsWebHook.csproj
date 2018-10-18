@@ -52,6 +52,8 @@
   <ItemGroup>
     <Compile Include="Consts.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Kill.cs" />
+    <Compile Include="MeansOfDeath.cs" />
     <Compile Include="NewLog.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />

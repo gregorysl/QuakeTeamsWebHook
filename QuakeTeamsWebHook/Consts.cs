@@ -8,5 +8,6 @@
         public const string ShutdownGame = "ShutdownGame:";
         public const string ClientConnect = "ClientConnect:";
         public const string ClientUserinfoChanged = "ClientUserinfoChanged:";
+        public const string Kill = "Kill:";
     }
 }

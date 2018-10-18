@@ -10,17 +10,20 @@ namespace QuakeTeamsWebHook
         private readonly Regex _mapNameRegex;
         private readonly Regex _userInfoChangedRegex;
         private readonly Regex _clientConnectRegex;
+        private readonly Regex _killRegex;
 
+        public int killCount { get; set; }
         public Game Game { get; }
 
         public NewLog()
         {
 
-            _actionsRegex = new Regex($"({Consts.ShutdownGame}|{Consts.Score}|{Consts.Exit}|{Consts.InitGame}|{Consts.ClientConnect}|{Consts.ClientUserinfoChanged})");
+            _actionsRegex = new Regex($"({Consts.ShutdownGame}|{Consts.Score}|{Consts.Exit}|{Consts.InitGame}|{Consts.ClientConnect}|{Consts.ClientUserinfoChanged}|{Consts.Kill})");
             _scorecardRegex = new Regex(@"score: (\d+)  ping: \d+  client: \d+ (.+)");
             _mapNameRegex = new Regex(@"mapname\\(.+?)\\");
             _userInfoChangedRegex = new Regex(@"(\d+) n\\(.+?)\\t\\0\\");
             _clientConnectRegex = new Regex($@"{Consts.ClientConnect} (\d+)");
+            _killRegex = new Regex($@".+{Consts.Kill} (\d+) (\d+) (\d+):.+(MOD.+)");
             Game = new Game();
         }
 
@@ -45,7 +48,6 @@ namespace QuakeTeamsWebHook
                         var card = new Scorecard(s, GetMatchValue(matches, 2));
                         Game.Scorecard.Add(card);
                     }
-                    logger.Info("parsedScores");
                     break;
                 case Consts.InitGame:
                     var mapMatch = _mapNameRegex.Match(line);
@@ -62,6 +64,14 @@ namespace QuakeTeamsWebHook
                     var name = GetMatchValue(playerMatch, 2);
                     Game.EditPlayer(id, name);
                     break;
+                case Consts.Kill:
+                    var killMatch = _killRegex.Match(line);
+                    var killer = int.Parse(GetMatchValue(killMatch, 1));
+                    var killed = int.Parse(GetMatchValue(killMatch, 2));
+                    var means = int.Parse(GetMatchValue(killMatch, 3));
+                    Game.AddKill(killer, killed, means);
+                    break;
+
                 default:
                     break;
             }
