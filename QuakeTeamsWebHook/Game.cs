@@ -6,7 +6,7 @@ namespace QuakeTeamsWebHook
 {
     public class Game
     {
-        public bool Finished;
+        public bool Finished= false;
         public string EndReason = "";
         public string MapName = "";
         public List<Scorecard> Scorecard = new List<Scorecard>();
@@ -22,6 +22,7 @@ namespace QuakeTeamsWebHook
             Finished = false;
             Scorecard = new List<Scorecard>();
             Players = new List<Player>();
+            Kills = new List<Kill>();
             EndReason = "";
             MapName = "";
         }

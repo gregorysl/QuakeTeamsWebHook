@@ -5,7 +5,7 @@ namespace QuakeTeamsWebHook
 {
     public class NewLog
     {
-        private readonly Regex _actionsRegex;
+        public readonly Regex _actionsRegex;
         private readonly Regex _scorecardRegex;
         private readonly Regex _mapNameRegex;
         private readonly Regex _userInfoChangedRegex;
@@ -14,16 +14,16 @@ namespace QuakeTeamsWebHook
 
         public int killCount { get; set; }
         public Game Game { get; }
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         public NewLog()
         {
-
-            _actionsRegex = new Regex($"({Consts.ShutdownGame}|{Consts.Score}|{Consts.Exit}|{Consts.InitGame}|{Consts.ClientConnect}|{Consts.ClientUserinfoChanged}|{Consts.Kill})");
-            _scorecardRegex = new Regex(@"score: (\d+)  ping: \d+  client: \d+ (.+)");
-            _mapNameRegex = new Regex(@"mapname\\(.+?)\\");
-            _userInfoChangedRegex = new Regex(@"(\d+) n\\(.+?)\\t\\0\\");
-            _clientConnectRegex = new Regex($@"{Consts.ClientConnect} (\d+)");
-            _killRegex = new Regex($@".+{Consts.Kill} (\d+) (\d+) (\d+):.+(MOD.+)");
+            _actionsRegex = new Regex($"({Consts.ShutdownGame}|{Consts.Score}|{Consts.Exit}|{Consts.InitGame}|{Consts.ClientConnect}|{Consts.ClientUserinfoChanged}|{Consts.Kill})", RegexOptions.Compiled);
+            _scorecardRegex = new Regex(@"score: (\d+)  ping: \d+  client: \d+ (.+)", RegexOptions.Compiled);
+            _mapNameRegex = new Regex(@"mapname\\(.+?)\\", RegexOptions.Compiled);
+            _userInfoChangedRegex = new Regex(@"(\d+) n\\(.+?)\\t\\0\\", RegexOptions.Compiled);
+            _clientConnectRegex = new Regex($@"{Consts.ClientConnect} (\d+)", RegexOptions.Compiled);
+            _killRegex = new Regex($@".+{Consts.Kill} (\d+) (\d+) (\d+):.+(MOD.+)", RegexOptions.Compiled);
             Game = new Game();
         }
 
@@ -37,39 +37,28 @@ namespace QuakeTeamsWebHook
                     Game.Finished = true;
                     break;
                 case Consts.Exit:
-                    const string findText = " Exit: ";
-                    Game.EndReason = line.Substring(line.IndexOf(findText) + findText.Length);
+                    logger.Info(line);
+                    Exit(line);
                     break;
                 case Consts.Score:
-                    var matches = _scorecardRegex.Match(line);
-                    if (matches.Groups.Count == 3)
-                    {
-                        var s = int.Parse(GetMatchValue(matches, 1));
-                        var card = new Scorecard(s, GetMatchValue(matches, 2));
-                        Game.Scorecard.Add(card);
-                    }
+                    logger.Info(line);
+                    Score(line);
                     break;
                 case Consts.InitGame:
-                    var mapMatch = _mapNameRegex.Match(line);
-                    Game.MapName = GetMatchValue(mapMatch, 1);
+                    logger.Info(line);
+                    Init(line);
                     break;
                 case Consts.ClientConnect:
-                    var connectedMatch = _clientConnectRegex.Match(line);
-                    var connectedId = GetMatchValue(connectedMatch, 1);
-                    Game.AddPlayer(connectedId);
+                    logger.Info(line);
+                    Connect(line);
                     break;
                 case Consts.ClientUserinfoChanged:
-                    var playerMatch = _userInfoChangedRegex.Match(line);
-                    var id = GetMatchValue(playerMatch, 1);
-                    var name = GetMatchValue(playerMatch, 2);
-                    Game.EditPlayer(id, name);
+                    logger.Info(line);
+                    UserInfoChanged(line);
                     break;
                 case Consts.Kill:
-                    var killMatch = _killRegex.Match(line);
-                    var killer = int.Parse(GetMatchValue(killMatch, 1));
-                    var killed = int.Parse(GetMatchValue(killMatch, 2));
-                    var means = int.Parse(GetMatchValue(killMatch, 3));
-                    Game.AddKill(killer, killed, means);
+                    logger.Info(line);
+                    Kill(line);
                     break;
 
                 default:
@@ -83,6 +72,48 @@ namespace QuakeTeamsWebHook
         private string GetMatchValue(Match match, int i)
         {
             return match.Groups[i].Value;
+        }
+        private void UserInfoChanged(string line)
+        {
+            var playerMatch = _userInfoChangedRegex.Match(line);
+            var id = GetMatchValue(playerMatch, 1);
+            var name = GetMatchValue(playerMatch, 2);
+            Game.EditPlayer(id, name);
+
+        }
+        private void Connect(string line)
+        {
+            var connectedMatch = _clientConnectRegex.Match(line);
+            var connectedId = GetMatchValue(connectedMatch, 1);
+            Game.AddPlayer(connectedId);
+        }
+        private void Init(string line)
+        {
+            var mapMatch = _mapNameRegex.Match(line);
+            Game.MapName = GetMatchValue(mapMatch, 1);
+        }
+        private void Score(string line)
+        {
+            var matches = _scorecardRegex.Match(line);
+            if (matches.Groups.Count == 3)
+            {
+                var s = int.Parse(GetMatchValue(matches, 1));
+                var card = new Scorecard(s, GetMatchValue(matches, 2));
+                Game.Scorecard.Add(card);
+            }
+        }
+        private void Exit(string line)
+        {
+            const string findText = " Exit: ";
+            Game.EndReason = line.Substring(line.IndexOf(findText) + findText.Length);
+        }
+        private void Kill(string line)
+        {
+            var killMatch = _killRegex.Match(line);
+            var killer = int.Parse(GetMatchValue(killMatch, 1));
+            var killed = int.Parse(GetMatchValue(killMatch, 2));
+            var means = int.Parse(GetMatchValue(killMatch, 3));
+            Game.AddKill(killer, killed, means);
         }
     }
 }
