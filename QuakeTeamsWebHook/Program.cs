@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace QuakeTeamsWebHook
 {
@@ -64,7 +67,7 @@ namespace QuakeTeamsWebHook
         public static void MonitorTailOfFile(string filePath)
         {
             var initialFileSize = new FileInfo(filePath).Length;
-            var lastReadLength = initialFileSize - 10240;
+            var lastReadLength = initialFileSize - 1024;
             if (lastReadLength < 0) lastReadLength = 0;
 
             while (true)
@@ -91,7 +94,10 @@ namespace QuakeTeamsWebHook
                                 var textsplit = text.Split(
                                     new[] { "\r\n", "\r", "\n" },
                                     StringSplitOptions.None);
-                                foreach (var line in textsplit)
+
+                                var matchingLogs = textsplit.Where(x=>GameLog._actionsRegex.IsMatch(x));
+
+                                foreach (var line in matchingLogs)
                                 {
                                     GameLog.ProcessTheRows(line);
                                 }
@@ -102,6 +108,7 @@ namespace QuakeTeamsWebHook
                                     var scoreJson = GameLog.Game.ScorecardJson();
                                     var endReason = GameLog.Game.EndReason;
                                     var mapName = GameLog.Game.MapName;
+                                  
                                     GameLog.Game.Reset();
                                     if (!string.IsNullOrEmpty(scoreJson))
                                     {
